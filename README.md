@@ -1,26 +1,67 @@
-libosrm Ruby bindings
-=====================
+# Ruby bindings for libosrm
 
 - [Repository (Github)](https://github.com/Smarre/ruby-libosrm)
 - [Documentation](http://www.rubydoc.info/github/Smarre/ruby-libosrm/master)
 - [Bugs (Github)](https://github.com/Smarre/ruby-libosrm/issues)
 
-Description
------------
+## Description
 
 ruby-libosrm is a Ruby bindings for OSRM’s libosrm, the C++ bindings for OSRM, open source routing machine,
 which provides fast and customizable interface compared to OSRM’s old HTTP API.
 
-Synopsis
---------
+## Features
 
-Prepare a map data for OSRM:
+This gem provides the following OSRM features:
 
-```shell
-$ libosrm-prepare map.pbf
+### Match
+
+```ruby
+require "libosrm"
+
+osrm = OSRM.new "map.osrm"
+
+matchings = osrm.match([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
+
 ```
 
-Use the API:
+### Route
+
+```ruby
+require "libosrm"
+
+osrm = OSRM.new "map.osrm"
+
+routings = osrm.route([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
+
+```
+
+### Nearest
+
+```ruby
+require "libosrm"
+
+osrm = OSRM.new "map.osrm"
+
+nearest = osrm.nearest 60.1681473, 24.9417190
+
+```
+
+### Table
+
+TODO: write sample code
+
+### Trip
+
+TODO: write sample code
+
+### Tile
+
+TODO: write sample code
+
+
+...and additionally:
+
+### Distance by roads
 
 ```ruby
 require "libosrm"
@@ -28,23 +69,12 @@ require "libosrm"
 osrm = OSRM.new "map.osrm"
 
 # Returns distance by roads as a float, as meters
-distance = osrm.distance_by_roads { latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }
+distance = osrm.distance_by_roads [{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }]
 ```
 
-Features
---------
-
-- Straightforward API
-- Customizable requests
-
-Requirements
-------------
+## Requirements
 
 - Ruby 2.3 or greater
-- OSRM’s dependencies; see Installing section
-
-Installing
-----------
 
 Since libosrm is bindings for OSRM’s C++ library, you need to install same dependencies as you would do when compiling only OSRM.
 
@@ -61,7 +91,7 @@ From [OSRM’s README](https://github.com/Project-OSRM/osrm-backend/tree/5.12), 
 - osmium
 - zlib
 
-For Ubuntu 16.04, the packages to be installed would be
+For Ubuntu 16.04 and 18.10, the packages to be installed would be
 
 ```shell
 $ sudo apt install build-essential git cmake pkg-config \
@@ -69,7 +99,20 @@ libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
 libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
 ```
 
+### Prepare map data
+
+For libosrm to be able to calculate anything, it requires map data. You can use either data of whole world
+or a portion it, for example your country’s or specific city’s data.
+
+One place to get the data from is {http://download.geofabrik.de/index.html Geofabrik}.
+
+Currently (04/2019) ruby-libosrm only supports MLD routing algorithm. See preparation instructions from the OSRM project.
+
+
 You can find more information at [OSRM’s README](https://github.com/Project-OSRM/osrm-backend/tree/5.12).
+
+
+## Installation
 
 After you have required dependencies, you can install libosrm gem:
 
@@ -79,8 +122,10 @@ $ gem install libosrm
 
 or with Bundler
 
-    # In Gemfile
-    gem "libosrm"
+```ruby
+# In Gemfile
+gem "libosrm"
+```
 
 and then install the bundle:
 
@@ -92,66 +137,9 @@ If there is no missing dependencies, compilation of OSRM and libosrm should star
 should take a long time, so drink a cup of tea or hot chocolate. If everything went well,
 you should now have a working instance of libosrm.
 
-Basic usage
------
 
-1. Set up your project
+## Compiling from source code
 
-If you already set up your project, skip this step.
-
-Easiest way to manage your project is through [Bundler](http://bundler.io/). If you don’t have it,
-you can install it with `[sudo] gem install bundler`.
-
-```shell
-$ mkdir project
-$ cd project
-$ bundle init
-$ echo 'gem "libosrm"' >> Gemfile
-$ bundle install
-```
-
-2. Prepare map data
-
-For libosrm to be able to calculate anything, it requires map data. You can use either data of whole world
-or a portion it, for example your country’s or specific city’s data.
-
-One place to get the data from is {http://download.geofabrik.de/index.html Geofabrik}.
-
-For example:
-
-```shell
-$ mkdir map
-$ cd map
-$ wget http://download.geofabrik.de/europe/finland-latest.osm.pbf
-$ bundle exec libosrm-prepare finland-latest.osm.pbf
-```
-
-3. Testing that everything works
-
-After the map data has been processed, you can start to use libosrm. To ensure everything
-works, you can use following simple script:
-
-```ruby
-require "libosrm"
-
-osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
-
-# Returns distance by roads as a float, as meters
-distance = osrm.distance_by_roads([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
-puts distance
-```
-
-Save this script as test.rb (at root directory of your project) and run it:
-
-```shell
-$ bundle exec ruby test.rb
-```
-
-If you have Finnish map data, this should return you a distance.
-If you don’t have Finnish map data, an exception should be raised.
-
-Compiling from the repository
------------------------------
 
 Installing from gem (see Installing section) is preferred, but it is also possible to
 build from the source.
@@ -167,7 +155,7 @@ $ bundle install
 $ # Compile the library.
 $ bundle exec rake
 $ # Run tests to ensure the library works
-$ bundle exec cucumber
+$ bundle exec rake test
 ```
 
 Now you should have working instance of ruby-libosrm. To use it, you most likely want to build a gem and use it through
@@ -177,35 +165,55 @@ the gem in your project:
 $ # Build the gem
 $ gem build libosrm.gemspec
 $ # prepend with sudo if you don’t use user specific gem data
-$ gem install libosrm-0.0.1.gem
+$ gem install libosrm-1.0.0.gem
 ```
 
-Known issues
---------------
+## Known issues & TODO
 
+- Routing algorithm is fixed to MLD (should be configurable)
 - some requests are not fully supported (TODO)
-- OSRM profile is not configurable (hardcoded to OSRM supplied car.lua)
 - Build files after gem installation are not cleaned
 - Linking OSRM statically instead as a library would further reduce disk space usage
 - Moving the gem to another location breaks the linkage, requiring reinstallation of the gem
-
-TODO
-----
-
 - Maybe we should by default bundle all libraries? That would make it easier to get everything compiled. Or at least check if system has version and only then use bundled one.
 
-Developers
-----------
+## Developers
 
-    $ gem install bundler
-    $ bundle install
-    $ cucumber
-    # write new feature
-    $ cucumber
-    # rinse and repeat :-)
+```shell
+$ gem install bundler
+$ bundle install
+$ rake test
+# write new feature
+$ rake test
+# rinse and repeat :-)
+```
 
-Github
-------
+### Testing that everything works
+
+After the map data has been processed, you can start to use libosrm. To ensure everything
+works, you can use following simple script:
+
+```ruby
+require "libosrm"
+
+osrm = OSRM.new "map/finland-latest.osrm"
+
+# Returns distance by roads as a float, as meters
+distance = osrm.distance_by_roads([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
+puts distance
+```
+
+Save this script as test.rb (at root directory of your project) and run it:
+
+```shell
+$ bundle exec ruby test.rb
+```
+
+If you have Finnish map data, this should return you a distance.
+If you don’t have Finnish map data, an exception should be raised.
+
+
+## Contributing
 
 You can do pull requests at Github using the standard pattern :-)
 
@@ -214,29 +222,3 @@ You can do pull requests at Github using the standard pattern :-)
 3. Commit your changes (git commit -am 'Add some feature')
 4. Push to the branch (git push origin my-new-feature)
 5. Create new Pull Request
-
-License
--------
-
-(The MIT License)
-
-Copyright (c) 2017-2018 Samu Voutilainen
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
