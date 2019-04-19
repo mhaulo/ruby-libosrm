@@ -42,6 +42,8 @@ Array OSRMAction::parse_routes(osrm::json::Array routes) {
         Hash route_result = parse_route(route);
         routes_result.push(route_result);
     }
+    
+    return routes_result;
 }
 
 Hash OSRMAction::parse_route(osrm::json::Object route) {

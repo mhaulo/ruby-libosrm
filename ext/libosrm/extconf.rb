@@ -37,9 +37,9 @@ when using_system_libraries?
     # Using system libraries means we rely on the system libxml2 with
     # regard to the iconv support.
 
-    dir_config("libosrm").any? or pkg_config("libosrm")
+    #dir_config("libosrm").any? or pkg_config("libosrm")
 
-    append_cflags("-I/usr/include/osrm")
+    append_cflags("-I/usr/local/include/osrm")
     have_library "osrm"
 else
     message "Building ruby-libosrm using packaged libraries.\n"
@@ -69,7 +69,7 @@ else
         append_cflags("-I#{recipe.path}/include -I#{recipe.path}/include/osrm")
 
         # I can’t get OSRM library detection to work properly, so just adding it manually (it’s compiled by us so it ought to work)
-        $LDFLAGS << " -Wl,-rpath,#{File.expand_path(recipe.work_path)} -L#{File.expand_path(recipe.work_path)} -losrm"
+        $LDFLAGS << " -Wl,-rpath,#{File.expand_path(recipe.work_path)} -L#{File.expand_path(recipe.work_path)} -losrmz"
 
         # Adding boost_system as OSRM’s dependency
         $LDFLAGS << " -lboost_system"

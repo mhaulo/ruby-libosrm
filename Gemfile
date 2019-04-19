@@ -6,7 +6,7 @@ gemspec
 gem "mini_portile2", "~> 2.3.0"
 
 group :development do
-  gem "pkg_config"
+  gem "pkg-config"
 end
 
 group :test do
