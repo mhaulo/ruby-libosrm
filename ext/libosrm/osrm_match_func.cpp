@@ -3,15 +3,21 @@
 
 #include <osrm/match_parameters.hpp>
 
-Hash parse_match_result(osrm::json::Object match) {
+
+Object wrap_match(Object self, Array coordinates, Hash opts) {
+    MatchFunc func;
+    return func.wrap_match(self, coordinates, opts);
+}
+
+Hash MatchFunc::parse_match_result(osrm::json::Object match) {
     Hash result;
     for(std::pair<std::string, osrm::util::json::Value> e : match.values) {
         if(e.first == "code") {
             result[String("code")] = e.second.get<osrm::json::String>().value;
         } else if(e.first == "tracepoints") {
-            // TODO
+            result[String("tracepoints")] = parse_waypoints(e.second.get<osrm::json::Array>());
         } else if(e.first == "matchings") {
-            // TODO
+            result[String("matchings")] = parse_routes(e.second.get<osrm::json::Array>());
         } else {
             throw Exception(rb_eRuntimeError, "Invalid JSON value when building a match from libosrm.so: %s", e.first.c_str());
         }
@@ -20,7 +26,7 @@ Hash parse_match_result(osrm::json::Object match) {
     return result;
 }
 
-Object wrap_match(Object self, Array coordinates, Hash opts) {
+Object MatchFunc::wrap_match(Object self, Array coordinates, Hash opts) {
     // Convert Ruby object to native type
     osrm::MatchParameters params;
 

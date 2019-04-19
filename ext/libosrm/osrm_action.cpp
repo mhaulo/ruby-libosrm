@@ -34,6 +34,16 @@ Array OSRMAction::parse_waypoints(osrm::json::Array waypoints) {
     return waypoints_result;
 }
 
+Array OSRMAction::parse_routes(osrm::json::Array routes) {
+    Array routes_result;
+
+    for (auto const& routeValue : routes.values) {
+        auto route = routeValue.get<osrm::json::Object>();
+        Hash route_result = parse_route(route);
+        routes_result.push(route_result);
+    }
+}
+
 Hash OSRMAction::parse_route(osrm::json::Object route) {
     Hash route_result;
     for(std::pair<std::string, osrm::util::json::Value> e : route.values) {

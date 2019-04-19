@@ -13,6 +13,7 @@ class OSRMAction {
 
 public:
     Array parse_waypoints(osrm::json::Array waypoints);
+    Array parse_routes(osrm::json::Array routes);
     Hash parse_route(osrm::json::Object route);
 
 private:
