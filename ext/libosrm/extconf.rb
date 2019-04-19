@@ -40,6 +40,11 @@ when using_system_libraries?
     #dir_config("libosrm").any? or pkg_config("libosrm")
 
     append_cflags("-I/usr/local/include/osrm")
+    append_cflags("-I/usr/include/boost")
+    have_library "boost_system"
+    have_library "boost_filesystem"
+    have_library "boost_iostreams"
+    have_library "boost_thread"
     have_library "osrm"
 else
     message "Building ruby-libosrm using packaged libraries.\n"

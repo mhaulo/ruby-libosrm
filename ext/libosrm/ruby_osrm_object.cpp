@@ -20,6 +20,7 @@ osrm::engine::EngineConfig from_ruby<osrm::engine::EngineConfig>(Object x) {
     osrm::engine::EngineConfig config;
     config.storage_config = { x.to_s().c_str() };
     config.use_shared_memory = false;
+    config.algorithm = osrm::engine::EngineConfig::Algorithm::MLD;
     return config;
 }
 
