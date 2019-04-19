@@ -20,7 +20,8 @@ when arg_config("--help")
 end
 
 def using_system_libraries?
-    arg_config("--use-system-libraries", !!ENV["LIBOSRM_USE_SYSTEM_LIBRARIES"])
+    #arg_config("--use-system-libraries", !!ENV["LIBOSRM_USE_SYSTEM_LIBRARIES"])
+    true
 end
 
 def symlink_osrm_data recipe
@@ -36,7 +37,7 @@ when using_system_libraries?
     # Using system libraries means we rely on the system libxml2 with
     # regard to the iconv support.
 
-    dir_config("libosrm").any? or package_config("libosrm")
+    dir_config("libosrm").any? or pkg_config("libosrm")
 
     append_cflags("-I/usr/include/osrm")
     have_library "osrm"
