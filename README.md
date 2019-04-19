@@ -43,8 +43,6 @@ Requirements
 - Ruby 2.3 or greater
 - OSRM’s dependencies; see Installing section
 
-Installing
-----------
 
 Since libosrm is bindings for OSRM’s C++ library, you need to install same dependencies as you would do when compiling only OSRM.
 
@@ -71,6 +69,11 @@ libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
 
 You can find more information at [OSRM’s README](https://github.com/Project-OSRM/osrm-backend/tree/5.12).
 
+
+
+Installing
+----------
+
 After you have required dependencies, you can install libosrm gem:
 
 ```shell
@@ -91,6 +94,45 @@ $ bundle install
 If there is no missing dependencies, compilation of OSRM and libosrm should start. The compilation
 should take a long time, so drink a cup of tea or hot chocolate. If everything went well,
 you should now have a working instance of libosrm.
+
+
+Basic usage
+-----
+
+### Match
+
+```ruby
+require "libosrm"
+
+osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
+
+matchings = osrm.match([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
+
+```
+
+### Route
+
+```ruby
+require "libosrm"
+
+osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
+
+routings = osrm.route([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
+
+```
+
+### Nearest
+
+```ruby
+require "libosrm"
+
+osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
+
+nearest = osrm.nearest(60.1681473, 24.9417190)
+
+```
+
+
 
 Basic usage
 -----
