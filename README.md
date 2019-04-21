@@ -29,7 +29,7 @@ osrm = LibOSRM::OSRM.new "map.osrm"
 
 
 # Returns distance by roads as a float, as meters
-distance = osrm.distance_by_roads { latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }
+distance = osrm.distance_by_roads [{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }]
 ```
 
 Features
@@ -105,7 +105,7 @@ Basic usage
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
+osrm = LibOSRM::OSRM.new "map.osrm"
 
 matchings = osrm.match([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
 
@@ -116,7 +116,7 @@ matchings = osrm.match([{ latitude: 60.1681473, longitude: 24.9417190 }, { latit
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
+osrm = LibOSRM::OSRM.new "map.osrm"
 
 routings = osrm.route([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
 
@@ -127,7 +127,7 @@ routings = osrm.route([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitu
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
+osrm = LibOSRM::OSRM.new "map.osrm"
 
 nearest = osrm.nearest(60.1681473, 24.9417190)
 
