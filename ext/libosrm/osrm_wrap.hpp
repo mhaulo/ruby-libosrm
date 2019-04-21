@@ -29,6 +29,7 @@ public:
 private:
     Array parse_routes(osrm::json::Array routes);
     Hash parse_route(json::Object route);
+    Hash parse_geometry(osrm::util::json::Value);
     Array parse_route_legs(osrm::util::json::Value value);
     Array parse_route_leg_steps(osrm::util::json::Value value);
     Hash parse_route_leg_annotations(osrm::util::json::Value value);

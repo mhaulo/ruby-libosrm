@@ -94,10 +94,10 @@ Object OsrmWrap::route(Array coordinates) {
     
     if (status == Status::Ok) {
         Array routes_array;
-        auto &routeValues = osrm_output.values["routes"].get<json::Array>();
+        auto &routeValues = osrm_output.values["routes"].get<osrm::json::Array>();
         
         for(auto const& routeValue : routeValues.values) {
-            routes_array.push(parse_route(routeValue.get<json::Object>()));
+            routes_array.push(parse_route(routeValue.get<osrm::json::Object>()));
         }
         result[String("routes")] = routes_array;
     }
@@ -305,7 +305,6 @@ Object OsrmWrap::table(Array coordinates, Hash opts) {
                 result[String("destinations")] = parse_waypoints(e.second.get<osrm::json::Array>());
             }
             else {
-                throw Exception(rb_eRuntimeError, "Invalid JSON value when building a table from libosrm.so: %s", e.first.c_str());
             }
         }
     }
@@ -481,24 +480,24 @@ Array OsrmWrap::parse_routes(osrm::json::Array routes) {
 }
 
 
-Hash OsrmWrap::parse_route(json::Object route) {
+Hash OsrmWrap::parse_route(osrm::json::Object route) {
     Hash route_result;
 
-    for(std::pair<std::string, util::json::Value> e : route.values) {
+    for(std::pair<std::string, osrm::util::json::Value> e : route.values) {
         if(e.first == "distance") {
-            route_result[String("distance")] = e.second.get<json::Number>().value;
+            route_result[String("distance")] = e.second.get<osrm::json::Number>().value;
         }
         else if(e.first == "duration") {
-            route_result[String("duration")] = e.second.get<json::Number>().value;
+            route_result[String("duration")] = e.second.get<osrm::json::Number>().value;
         }
         else if(e.first == "weight") {
-            route_result[String("weight")] = e.second.get<json::Number>().value;
+            route_result[String("weight")] = e.second.get<osrm::json::Number>().value;
         }
         else if(e.first == "weight_name") {
-            route_result[String("weight_name")] = e.second.get<json::String>().value;
+            route_result[String("weight_name")] = e.second.get<osrm::json::String>().value;
         }
         else if(e.first == "geometry") {
-            route_result[String("geometry")] = e.second.get<json::String>().value;
+            route_result[String("geometry")] = parse_geometry(e.second);
         }
         else if(e.first == "legs") {
             route_result[String("legs")] = parse_route_legs(e.second);
@@ -509,6 +508,34 @@ Hash OsrmWrap::parse_route(json::Object route) {
     }
 
     return route_result;
+}
+
+Hash OsrmWrap::parse_geometry(osrm::util::json::Value value) {
+    auto geometry = value.get<osrm::json::Object>();
+    Hash result;
+
+    for(std::pair<std::string, osrm::util::json::Value> e : geometry.values) {
+        if (e.first == "type") {
+            result[String("type")] = e.second.get<osrm::json::String>().value;
+        }
+        else if (e.first == "coordinates") {
+            Array coordinates;
+            for(auto const &value : e.second.get<osrm::json::Array>().values) {
+                Array coordinate;
+
+                for (auto const &c : value.get<osrm::json::Array>().values) {
+                    coordinate.push(c.get<osrm::json::Number>().value);
+                }
+
+                coordinates.push(coordinate);
+            }
+            result[String("coordinates")] = coordinates;
+        }
+        else {
+        }
+    }
+
+    return result;
 }
 
 Array OsrmWrap::parse_route_legs(osrm::util::json::Value value) {
@@ -621,47 +648,49 @@ Hash OsrmWrap::parse_route_leg_annotations(osrm::util::json::Value value) {
         if(e.first == "distance") {
             Array values;
             for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(to_ruby(value));
+                values.push(value.get<osrm::json::Number>().value);
             }
             result[String("distance")] = values;
         }
         else if(e.first == "duration") {
             Array values;
             for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(to_ruby(value));
+                values.push(value.get<osrm::json::Number>().value);
             }
             result[String("duration")] = values;
         }
         else if(e.first == "datasources") {
             Array values;
             for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(to_ruby(value));
+                values.push(value.get<osrm::json::Number>().value);
             }
             result[String("datasources")] = values;
         }
         else if(e.first == "nodes") {
             Array values;
             for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(to_ruby(value));
+                values.push(value.get<osrm::json::Number>().value);
             }
             result[String("nodes")] = values;
         }
         else if(e.first == "weight") {
             Array values;
             for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(to_ruby(value));
+                values.push(value.get<osrm::json::Number>().value);
             }
             result[String("weight")] = values;
+        }
+        else if (e.first == "metadata") {
+            // TODO
         }
         else if(e.first == "speed") {
             Array values;
             for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(to_ruby(value));
+                values.push(value.get<osrm::json::Number>().value);
             }
             result[String("speed")] = values;
         }
         else  {
-            throw Exception(rb_eRuntimeError, "Invalid JSON value when building a route leg annotations from libosrm.so: %s", e.first.c_str());
         }
     }
 
@@ -699,7 +728,6 @@ Array OsrmWrap::parse_waypoints(osrm::json::Array waypoints) {
                 waypoint_result[String("trips_index")] = e.second.get<osrm::json::Number>().value;
             }
             else {
-                throw Exception(rb_eRuntimeError, "Invalid JSON value when building waypoints from libosrm.so: %s", e.first.c_str());
             }
         }
 

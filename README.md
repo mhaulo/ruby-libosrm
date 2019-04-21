@@ -116,9 +116,9 @@ matchings = osrm.match([{ latitude: 60.1681473, longitude: 24.9417190 }, { latit
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map.osrm"
+osrm = OSRM.new "map.osrm"
 
-routings = osrm.route([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
+routings = osrm.route([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
 
 ```
 
