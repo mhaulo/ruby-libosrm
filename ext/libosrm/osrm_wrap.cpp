@@ -1,15 +1,43 @@
+#include "osrm/match_parameters.hpp"
+#include "osrm/nearest_parameters.hpp"
+#include "osrm/route_parameters.hpp"
+#include "osrm/table_parameters.hpp"
+#include "osrm/trip_parameters.hpp"
+#include "osrm/tile_parameters.hpp"
+
+#include "osrm/coordinate.hpp"
+#include "osrm/engine_config.hpp"
+#include "osrm/json_container.hpp"
+
+#include "osrm/osrm.hpp"
+#include "osrm/status.hpp"
+
+#include <string>
+
 #include "osrm_wrap.hpp"
 
-using namespace Rice;
-using namespace osrm;
 
-OsrmWrap() {
-    osrm = Data_Object<osrm::OSRM>(self);
+
+
+OsrmWrap::OsrmWrap() {
+    EngineConfig config;
+    config.use_shared_memory = false;
+    config.algorithm = EngineConfig::Algorithm::MLD;
+    osrm = new OSRM({config});
 }
 
 
-~OsrmWrap() {
-    delete orsm;
+OsrmWrap::OsrmWrap(std::string database_path) {
+    EngineConfig config;
+    config.storage_config = {database_path.c_str()};
+    config.use_shared_memory = false;
+    config.algorithm = EngineConfig::Algorithm::MLD;
+    osrm = new OSRM({config});
+}
+
+
+OsrmWrap::~OsrmWrap() {
+    delete osrm;
 }
 
 
@@ -135,7 +163,7 @@ Object OsrmWrap::match(Array coordinates) {
     result[String("code")] = osrm_output.values["code"].get<json::String>().value;
     
     if (status == Status::Ok) {
-        for(std::pair<std::string, osrm::util::json::Value> e : match.values) {
+        for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
             if(e.first == "code") {
                 result[String("code")] = e.second.get<osrm::json::String>().value;
             }
@@ -201,7 +229,7 @@ Object OsrmWrap::nearest(double lat, double lon) {
     result[String("code")] = osrm_output.values["code"].get<json::String>().value;
     
     if (status == Status::Ok) {
-        for(std::pair<std::string, osrm::util::json::Value> e : nearest.values) {
+        for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
             if(e.first == "code") {
                 result[String("code")] = e.second.get<osrm::json::String>().value;
             }
@@ -253,7 +281,7 @@ Object OsrmWrap::table(Array coordinates, Hash opts) {
     result[String("code")] = osrm_output.values["code"].get<json::String>().value;
 
     if (status == osrm::Status::Ok) {
-        for(std::pair<std::string, osrm::util::json::Value> e : match.values) {
+        for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
             if(e.first == "code") {
                 result[String("code")] = e.second.get<osrm::json::String>().value;
             }
@@ -393,9 +421,6 @@ Object OsrmWrap::tile(int x, int y, int zoom) {
     // Response is a std::string, instead of JSON stuff that is elsewhere
     std::string result;
 
-    Data_Object<osrm::OSRM> osrm(self);
-
-    // Execute routing request, this does the heavy lifting
     const auto status = osrm->Tile(params, result);
 
     if (status != osrm::Status::Ok) {
@@ -407,7 +432,7 @@ Object OsrmWrap::tile(int x, int y, int zoom) {
 
 
 
-Object wrap_distance_by_roads(Array coordinates) {
+Object OsrmWrap::distance_by_roads(Array coordinates) {
     osrm::RouteParameters params;
 
     Array::iterator it = coordinates.begin();
@@ -441,6 +466,18 @@ Object wrap_distance_by_roads(Array coordinates) {
     }
 
     return to_ruby(distance);
+}
+
+Array OsrmWrap::parse_routes(osrm::json::Array routes) {
+    Array result;
+
+    for (auto const& routeValue : routes.values) {
+        auto route = routeValue.get<osrm::json::Object>();
+        Hash route_result = parse_route(route);
+        result.push(route_result);
+    }
+
+    return result;
 }
 
 

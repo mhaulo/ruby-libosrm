@@ -25,7 +25,7 @@ Use the API:
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map.osrm"
+osrm = OSRM.new "map.osrm"
 
 
 # Returns distance by roads as a float, as meters
