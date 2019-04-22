@@ -22,14 +22,11 @@ Gem::Specification.new do |s|
     "lib/libosrm.rb",
     "lib/libosrm/osrm.rb",
     "lib/libosrm/version.rb",
-    "libexec/.keep",
-    "osrm/profiles/.keep"
   ] +
     Dir.glob("ext/libosrm/*.cpp") +
     Dir.glob("ext/libosrm/*.hpp")
   s.extensions  = %w[ext/libosrm/extconf.rb]
   s.bindir      = "bin"
-  s.executables = [ "libosrm-prepare" ]
   s.homepage    = "https://github.com/Smarre/ruby-libosrm"
   s.license     = "MIT"
 

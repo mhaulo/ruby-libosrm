@@ -11,5 +11,6 @@ end
 
 group :test do
   gem "cucumber"
+  gem "minitest"
   gem "rspec-expectations"
 end

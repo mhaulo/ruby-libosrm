@@ -24,12 +24,6 @@ def using_system_libraries?
     true
 end
 
-def symlink_osrm_data recipe
-    FileUtils.ln_s "../#{recipe.work_path}/osrm-extract", "libexec/osrm-extract" unless File.exist? "libexec/osrm-extract"
-    FileUtils.ln_s "../#{recipe.work_path}/osrm-contract", "libexec/osrm-contract" unless File.exist? "libexec/osrm-contract"
-    FileUtils.ln_s "../../#{recipe.work_path}/../profiles/car.lua", "osrm/profiles/car.lua" unless File.exist? "osrm/profiles/car.lua"
-end
-
 case
 when using_system_libraries?
     message "Building ruby-libosrm using system libraries.\n"
@@ -69,7 +63,6 @@ else
         recipe.cook
         recipe.activate
 
-        symlink_osrm_data recipe
 
         append_cflags("-I#{recipe.path}/include -I#{recipe.path}/include/osrm")
 
@@ -83,5 +76,4 @@ end
 
 append_cflags("-DHAVE_CXX11")
 
-#create_makefile "libosrm/libosrm"
 create_makefile "libosrm/ruby_libosrm"
