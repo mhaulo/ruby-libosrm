@@ -14,12 +14,6 @@ which provides fast and customizable interface compared to OSRM’s old HTTP API
 Synopsis
 --------
 
-Prepare a map data for OSRM:
-
-```shell
-$ libosrm-prepare map.pbf
-```
-
 Use the API:
 
 ```ruby
@@ -29,7 +23,7 @@ osrm = OSRM.new "map.osrm"
 
 
 # Returns distance by roads as a float, as meters
-distance = osrm.distance_by_roads [{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }]
+distance = osrm.distance_by_roads [{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }]
 ```
 
 Features
@@ -105,9 +99,9 @@ Basic usage
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map.osrm"
+osrm = OSRM.new "map.osrm"
 
-matchings = osrm.match([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
+matchings = osrm.match([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
 
 ```
 
@@ -127,9 +121,9 @@ routings = osrm.route([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, 
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map.osrm"
+osrm = OSRM.new "map.osrm"
 
-nearest = osrm.nearest(60.1681473, 24.9417190)
+nearest = osrm.nearest 60.1681473, 24.9417190
 
 ```
 
@@ -177,10 +171,10 @@ works, you can use following simple script:
 ```ruby
 require "libosrm"
 
-osrm = LibOSRM::OSRM.new "map/finland-latest.osrm"
+osrm = OSRM.new "map/finland-latest.osrm"
 
 # Returns distance by roads as a float, as meters
-distance = osrm.distance_by_roads([{ latitude: 60.1681473, longitude: 24.9417190 }, { latitude: 60.1694561, longitude: 24.9385663 }])
+distance = osrm.distance_by_roads([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
 puts distance
 ```
 
@@ -242,9 +236,9 @@ Developers
 
     $ gem install bundler
     $ bundle install
-    $ cucumber
+    $ rake test
     # write new feature
-    $ cucumber
+    $ rake test
     # rinse and repeat :-)
 
 Github
@@ -263,7 +257,7 @@ License
 
 (The MIT License)
 
-Copyright (c) 2017-2018 Samu Voutilainen
+Copyright (c) 2017-2019 Samu Voutilainen, Mika Haulo
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

@@ -17,7 +17,7 @@
 #include "osrm_wrap.hpp"
 
 
-
+// ------------- Standard constructors and destructors ------------------------
 
 OsrmWrap::OsrmWrap() {
     EngineConfig config;
@@ -40,6 +40,7 @@ OsrmWrap::~OsrmWrap() {
     delete osrm;
 }
 
+// ------------- Main features ------------------------------------------------
 
 Object OsrmWrap::route(Array coordinates) {
     RouteParameters params;
@@ -466,6 +467,11 @@ Object OsrmWrap::distance_by_roads(Array coordinates) {
 
     return to_ruby(distance);
 }
+
+
+
+// ------------- Private helper functions -------------------------------------
+
 
 Array OsrmWrap::parse_routes(osrm::json::Array routes) {
     Array result;

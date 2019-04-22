@@ -7,6 +7,11 @@
 using namespace Rice;
 using namespace osrm;
 
+/*
+ * This is the entry point for this gem. The methods listed below are the ones
+ * that can be called from ruby code.
+ */
+
 extern "C"
 void Init_ruby_libosrm() {
     RUBY_TRY
