@@ -5,9 +5,9 @@ gemspec
 
 group :development do
   gem "pkg-config"
+  gem "rice"
 end
 
 group :test do
   gem "minitest"
-  gem "rspec-expectations"
 end

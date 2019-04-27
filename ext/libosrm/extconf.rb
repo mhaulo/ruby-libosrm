@@ -6,10 +6,6 @@ require "yaml"
 def do_help
   print <<HELP
 usage: ruby #{$0} [options]
-
-    --use-system-libraries
-        Use system libraries instead of building and using the bundled
-        libraries.
 HELP
   exit! 0
 end
