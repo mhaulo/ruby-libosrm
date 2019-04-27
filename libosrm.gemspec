@@ -5,7 +5,7 @@ require "date"
 require_relative "lib/libosrm/version"
 
 Gem::Specification.new do |s|
-  s.name        = "libosrm"
+  s.name        = "ruby-libosrm"
   s.version     = LibOSRM::VERSION
   s.date        = Date.today
   s.summary     = "libosrm bindings for Ruby."
