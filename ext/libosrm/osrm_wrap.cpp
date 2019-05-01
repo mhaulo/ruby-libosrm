@@ -95,7 +95,10 @@ Object OsrmWrap::route(Array coordinates) {
     
     if (status == Status::Ok) {
         Array routes_array;
-        auto &routeValues = osrm_output.values["routes"].get<osrm::json::Array>();
+        try {
+            auto &routeValues = osrm_output.values["routes"].get<osrm::json::Array>();
+        }
+        catch(...) {}
         
         for(auto const& routeValue : routeValues.values) {
             routes_array.push(parse_route(routeValue.get<osrm::json::Object>()));
@@ -166,13 +169,22 @@ Object OsrmWrap::match(Array coordinates) {
     if (status == Status::Ok) {
         for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
             if(e.first == "code") {
-                result[String("code")] = e.second.get<osrm::json::String>().value;
+                try {
+                    result[String("code")] = e.second.get<osrm::json::String>().value;
+                }
+                catch(...) {}
             }
             else if(e.first == "tracepoints") {
-                result[String("tracepoints")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                try {
+                    result[String("tracepoints")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                }
+                catch(...) {}
             }
             else if(e.first == "matchings") {
-                result[String("matchings")] = parse_routes(e.second.get<osrm::json::Array>());
+                try {
+                    result[String("matchings")] = parse_routes(e.second.get<osrm::json::Array>());
+                }
+                catch(...) {}
             }
             else {
             }
@@ -232,10 +244,16 @@ Object OsrmWrap::nearest(double lat, double lon) {
     if (status == Status::Ok) {
         for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
             if(e.first == "code") {
-                result[String("code")] = e.second.get<osrm::json::String>().value;
+                try {
+                    result[String("code")] = e.second.get<osrm::json::String>().value;
+                }
+                catch(...) {}
             }
             else if(e.first == "waypoints") {
-                result[String("waypoints")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                try {
+                    result[String("waypoints")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                }
+                catch(...) {}
             }
             else {
             }
@@ -284,26 +302,38 @@ Object OsrmWrap::table(Array coordinates, Hash opts) {
     if (status == osrm::Status::Ok) {
         for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
             if(e.first == "code") {
-                result[String("code")] = e.second.get<osrm::json::String>().value;
+                try {
+                    result[String("code")] = e.second.get<osrm::json::String>().value;
+                }
+                catch(...) {}
             }
             else if(e.first == "durations") {
-                Array durations_result;
-                for(auto const& durationArrayValue : e.second.get<osrm::json::Array>().values) {
-                    auto durationArray = durationArrayValue.get<osrm::json::Array>();
-                    Array duration_result;
+                try {
+                    Array durations_result;
+                    for(auto const& durationArrayValue : e.second.get<osrm::json::Array>().values) {
+                        auto durationArray = durationArrayValue.get<osrm::json::Array>();
+                        Array duration_result;
 
-                    for(auto const& durationValue : durationArray.values) {
-                        duration_result.push(durationValue.get<osrm::json::Number>().value);
+                        for(auto const& durationValue : durationArray.values) {
+                            duration_result.push(durationValue.get<osrm::json::Number>().value);
+                        }
+                        durations_result.push(duration_result);
                     }
-                    durations_result.push(duration_result);
+                    result[String("durations")] = durations_result;
                 }
-                result[String("durations")] = durations_result;
+                catch(...) {}
             }
             else if(e.first == "sources") {
-                result[String("sources")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                try {
+                    result[String("sources")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                }
+                catch(...) {}
             }
             else if(e.first == "destinations") {
-                result[String("destinations")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                try {
+                    result[String("destinations")] = parse_waypoints(e.second.get<osrm::json::Array>());
+                }
+                catch(...) {}
             }
             else {
             }
