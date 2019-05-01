@@ -119,6 +119,7 @@ Object OsrmWrap::match(Array coordinates) {
     params.geometries = RouteParameters::GeometriesType::GeoJSON;
     params.overview = RouteParameters::OverviewType::Full;
     params.gaps = MatchParameters::GapsType::Ignore;
+    params.annotations = true;
 
 // TODO: use this
 //     if(!opts.is_nil()) {
