@@ -89,27 +89,27 @@ Object OsrmWrap::route(Array coordinates) {
 
     json::Object osrm_output;
     const auto status = osrm->Route(params, osrm_output);
-    
+
     Hash result;
     result[String("code")] = osrm_output.values["code"].get<json::String>().value;
-    
+
     if (status == Status::Ok) {
         Array routes_array;
         try {
             auto &routeValues = osrm_output.values["routes"].get<osrm::json::Array>();
+            for(auto const& routeValue : routeValues.values) {
+                routes_array.push(parse_route(routeValue.get<osrm::json::Object>()));
+            }
+            result[String("routes")] = routes_array;
         }
         catch(...) {}
-        
-        for(auto const& routeValue : routeValues.values) {
-            routes_array.push(parse_route(routeValue.get<osrm::json::Object>()));
-        }
-        result[String("routes")] = routes_array;
+
     }
     else {
         const auto message = osrm_output.values["message"].get<json::String>().value;
         result[String("message")] = message;
     }
-    
+
     return result;
 }
 
