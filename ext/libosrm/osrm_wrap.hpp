@@ -43,6 +43,7 @@ private:
     Array parse_route_leg_steps(osrm::util::json::Value value);
     Hash parse_route_leg_annotations(osrm::util::json::Value value);
     Array parse_waypoints(json::Array waypoints);
+    Hash parse_waypoint(json::Object waypoint);
     std::vector<std::size_t> table_array_conversion(Object o);
 
     // OSRM routing engine

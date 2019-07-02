@@ -16,8 +16,10 @@ class RubyLibOsrmTest < Minitest::Test
         response = @osrm.match [{lat: 61.4445, lon: 23.8383}, {lat: 61.4423, lon: 23.8426}, {lat: 61.4369, lon: 23.8474}]
         assert_equal "Ok", response["code"]
         matched_coordinate = response["matchings"][0]["geometry"]["coordinates"][0]
+        waypoints = response["tracepoints"]
         assert_equal matched_coordinate[0].is_a?(Float), true
         assert_equal matched_coordinate[1].is_a?(Float), true
+        assert (waypoints and waypoints.length > 0)
     end
 
     def test_match_fail

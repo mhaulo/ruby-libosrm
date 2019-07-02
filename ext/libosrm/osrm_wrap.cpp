@@ -735,43 +735,51 @@ Hash OsrmWrap::parse_route_leg_annotations(osrm::util::json::Value value) {
 }
 
 Array OsrmWrap::parse_waypoints(osrm::json::Array waypoints) {
-    Array waypoints_result;
+    Array result;
 
     for(auto const& waypointValue : waypoints.values) {
-        auto waypoint = waypointValue.get<osrm::json::Object>();
-        Hash waypoint_result;
-
-        for(std::pair<std::string, osrm::util::json::Value> e : waypoint.values) {
-            if(e.first == "name") {
-                waypoint_result[String("name")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "location") {
-                Hash location;
-                auto const& values = e.second.get<osrm::json::Array>().values;
-                location[Symbol("latitude")] = values[1].get<osrm::json::Number>().value;
-                location[Symbol("longitude")] = values[0].get<osrm::json::Number>().value;
-                waypoint_result[String("location")] = location;
-            }
-            else if(e.first == "hint") {
-                waypoint_result[String("hint")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "distance") {
-                waypoint_result[String("distance")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "waypoint_index") { // Present in trip action
-                waypoint_result[String("waypoint_index")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "trips_index") { // Present in trip action
-                waypoint_result[String("trips_index")] = e.second.get<osrm::json::Number>().value;
-            }
-            else {
-            }
+        try {
+            auto waypoint = waypointValue.get<osrm::json::Object>();
+            Hash waypoint_result = parse_waypoint(waypoint);
+            result.push(waypoint_result);
         }
-
-        waypoints_result.push(waypoint_result);
+        catch(...) {}
     }
 
-    return waypoints_result;
+    return result;
+}
+
+Hash OsrmWrap::parse_waypoint(osrm::json::Object waypoint) {
+    Hash waypoint_result;
+
+    for(std::pair<std::string, osrm::util::json::Value> e : waypoint.values) {
+        if(e.first == "name") {
+            waypoint_result[String("name")] = e.second.get<osrm::json::String>().value;
+        }
+        else if(e.first == "location") {
+            Hash location;
+            auto const& values = e.second.get<osrm::json::Array>().values;
+            location[Symbol("latitude")] = values[1].get<osrm::json::Number>().value;
+            location[Symbol("longitude")] = values[0].get<osrm::json::Number>().value;
+            waypoint_result[String("location")] = location;
+        }
+        else if(e.first == "hint") {
+            waypoint_result[String("hint")] = e.second.get<osrm::json::String>().value;
+        }
+        else if(e.first == "distance") {
+            waypoint_result[String("distance")] = e.second.get<osrm::json::Number>().value;
+        }
+        else if(e.first == "waypoint_index") { // Present in trip action
+            waypoint_result[String("waypoint_index")] = e.second.get<osrm::json::Number>().value;
+        }
+        else if(e.first == "trips_index") { // Present in trip action
+            waypoint_result[String("trips_index")] = e.second.get<osrm::json::Number>().value;
+        }
+        else {
+        }
+    }
+
+    return waypoint_result;
 }
 
 std::vector<std::size_t> OsrmWrap::table_array_conversion(Object o) {
