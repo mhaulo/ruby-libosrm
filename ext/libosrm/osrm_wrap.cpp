@@ -90,25 +90,7 @@ Object OsrmWrap::route(Array coordinates) {
     json::Object osrm_output;
     const auto status = osrm->Route(params, osrm_output);
 
-    Hash result;
-    result[String("code")] = osrm_output.values["code"].get<json::String>().value;
-
-    if (status == Status::Ok) {
-        Array routes_array;
-        try {
-            auto &routeValues = osrm_output.values["routes"].get<osrm::json::Array>();
-            for(auto const& routeValue : routeValues.values) {
-                routes_array.push(parse_route(routeValue.get<osrm::json::Object>()));
-            }
-            result[String("routes")] = routes_array;
-        }
-        catch(...) {}
-
-    }
-    else {
-        const auto message = osrm_output.values["message"].get<json::String>().value;
-        result[String("message")] = message;
-    }
+    Hash result = parseObject(osrm_output);
 
     return result;
 }
@@ -161,41 +143,11 @@ Object OsrmWrap::match(Array coordinates) {
             util::FloatLatitude{lat}
         });
     }
-    
+
     json::Object osrm_output;
     const auto status = osrm->Match(params, osrm_output);
-    Hash result;
-    result[String("code")] = osrm_output.values["code"].get<json::String>().value;
-    
-    if (status == Status::Ok) {
-        for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
-            if(e.first == "code") {
-                try {
-                    result[String("code")] = e.second.get<osrm::json::String>().value;
-                }
-                catch(...) {}
-            }
-            else if(e.first == "tracepoints") {
-                try {
-                    result[String("tracepoints")] = parse_waypoints(e.second.get<osrm::json::Array>());
-                }
-                catch(...) {}
-            }
-            else if(e.first == "matchings") {
-                try {
-                    result[String("matchings")] = parse_routes(e.second.get<osrm::json::Array>());
-                }
-                catch(...) {}
-            }
-            else {
-            }
-        }
-    }
-    else {
-        const auto message = osrm_output.values["message"].get<json::String>().value;
-        result[String("message")] = message;
-    }
-    
+    Hash result = parseObject(osrm_output);
+
     return result;
 }
 
@@ -235,36 +187,12 @@ Object OsrmWrap::nearest(double lat, double lon) {
     params.coordinates.push_back(
         {util::FloatLongitude{lon}, util::FloatLatitude{lat}}
     );
-    
+
     json::Object osrm_output;
     const auto status = osrm->Nearest(params, osrm_output);
-    
-    Hash result;
-    result[String("code")] = osrm_output.values["code"].get<json::String>().value;
-    
-    if (status == Status::Ok) {
-        for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
-            if(e.first == "code") {
-                try {
-                    result[String("code")] = e.second.get<osrm::json::String>().value;
-                }
-                catch(...) {}
-            }
-            else if(e.first == "waypoints") {
-                try {
-                    result[String("waypoints")] = parse_waypoints(e.second.get<osrm::json::Array>());
-                }
-                catch(...) {}
-            }
-            else {
-            }
-        }
-    }
-    else {
-        const auto message = osrm_output.values["message"].get<json::String>().value;
-        result[String("message")] = message;
-    }
-    
+
+    Hash result = parseObject(osrm_output);
+
     return result;
 }
 
@@ -297,53 +225,7 @@ Object OsrmWrap::table(Array coordinates, Hash opts) {
 
     // Execute routing request, this does the heavy lifting
     const auto status = osrm->Table(params, osrm_output);
-    Hash result;
-    result[String("code")] = osrm_output.values["code"].get<json::String>().value;
-
-    if (status == osrm::Status::Ok) {
-        for(std::pair<std::string, osrm::util::json::Value> e : osrm_output.values) {
-            if(e.first == "code") {
-                try {
-                    result[String("code")] = e.second.get<osrm::json::String>().value;
-                }
-                catch(...) {}
-            }
-            else if(e.first == "durations") {
-                try {
-                    Array durations_result;
-                    for(auto const& durationArrayValue : e.second.get<osrm::json::Array>().values) {
-                        auto durationArray = durationArrayValue.get<osrm::json::Array>();
-                        Array duration_result;
-
-                        for(auto const& durationValue : durationArray.values) {
-                            duration_result.push(durationValue.get<osrm::json::Number>().value);
-                        }
-                        durations_result.push(duration_result);
-                    }
-                    result[String("durations")] = durations_result;
-                }
-                catch(...) {}
-            }
-            else if(e.first == "sources") {
-                try {
-                    result[String("sources")] = parse_waypoints(e.second.get<osrm::json::Array>());
-                }
-                catch(...) {}
-            }
-            else if(e.first == "destinations") {
-                try {
-                    result[String("destinations")] = parse_waypoints(e.second.get<osrm::json::Array>());
-                }
-                catch(...) {}
-            }
-            else {
-            }
-        }
-    }
-    else {
-        const auto message = osrm_output.values["message"].get<osrm::json::String>().value;
-        result[String("message")] = message;
-    }
+    Hash result = parseObject(osrm_output);
 
     return result;
 }
@@ -420,23 +302,7 @@ Object OsrmWrap::trip(Array coordinates, Hash opts) {
 
     osrm::json::Object osrm_output;
     const auto status = osrm->Trip(params, osrm_output);
-    Hash result;
-    result[String("code")] = osrm_output.values["code"].get<json::String>().value;
-
-    if (status == osrm::Status::Ok) {
-        result[String("waypoints")] = parse_waypoints(osrm_output.values["waypoints"].get<osrm::json::Array>());
-
-        Array trips_array;
-        auto &tripValues = osrm_output.values["trips"].get<osrm::json::Array>();
-        for(auto const& tripValue : tripValues.values) {
-            trips_array.push(parse_route(tripValue.get<osrm::json::Object>()));
-        }
-        result[String("trips")] = trips_array;
-    }
-    else {
-        const auto message = osrm_output.values["message"].get<osrm::json::String>().value;
-        result[String("message")] = message;
-    }
+    Hash result = parseObject(osrm_output);
 
     return result;
 }
@@ -482,304 +348,102 @@ Object OsrmWrap::distance_by_roads(Array coordinates) {
     // Execute routing request, this does the heavy lifting
     const auto status = osrm->Route(params, osrm_output);
     const auto code = osrm_output.values["code"].get<osrm::json::String>().value;
+    Hash result = parseObject(osrm_output);
 
-    auto distance = 0.0;
-
-    if (status == osrm::Status::Ok) {
-        // We can take first route since we only want the distance.
-        auto &routes = osrm_output.values["routes"].get<osrm::json::Array>();
-        auto &route = routes.values.at(0).get<osrm::json::Object>();
-        distance = route.values["distance"].get<osrm::json::Number>().value;
-    }
-    else {
-        const auto message = osrm_output.values["message"].get<osrm::json::String>().value;
-        distance = 0;
-    }
-
-    return to_ruby(distance);
+    return result;
 }
 
 
 
 // ------------- Private helper functions -------------------------------------
 
+Hash OsrmWrap::parseObject(osrm::json::Object input) {
+    Hash output;
 
-Array OsrmWrap::parse_routes(osrm::json::Array routes) {
-    Array result;
-
-    for (auto const& routeValue : routes.values) {
-        auto route = routeValue.get<osrm::json::Object>();
-        Hash route_result = parse_route(route);
-        result.push(route_result);
+    for(std::pair<std::string, osrm::json::Value> e : input.values) {
+        int type_index = e.second.which();
+        switch (type_index) {
+            case 0: {
+                output[String(e.first)] = e.second.get<osrm::json::String>().value;
+                break;
+            }
+            case 1: {
+                output[String(e.first)] = e.second.get<osrm::json::Number>().value;
+                break;
+            }
+            case 2: {
+                auto value = e.second.get<osrm::json::Object>();
+                output[String(e.first)] = parseObject(value);
+                break;
+            }
+            case 3: {
+                auto array = e.second.get<osrm::json::Array>();
+                output[String(e.first)] = parseArray(array);
+                break;
+            }
+            case 4: {
+                output[String(e.first)] = true;
+                break;
+            }
+            case 5: {
+                output[String(e.first)] = false;
+                break;
+            }
+            case 6: {
+                output[String(e.first)] = NULL;
+                break;
+            }
+            default:
+                break;
+        }
     }
 
-    return result;
+    return output;
 }
 
+Array OsrmWrap::parseArray(osrm::json::Array input) {
+    Array output;
 
-Hash OsrmWrap::parse_route(osrm::json::Object route) {
-    Hash route_result;
+    for(auto const& array_item : input.values) {
+        int type_index = array_item.which();
 
-    for(std::pair<std::string, osrm::util::json::Value> e : route.values) {
-        if(e.first == "distance") {
-            route_result[String("distance")] = e.second.get<osrm::json::Number>().value;
-        }
-        else if(e.first == "duration") {
-            route_result[String("duration")] = e.second.get<osrm::json::Number>().value;
-        }
-        else if(e.first == "weight") {
-            route_result[String("weight")] = e.second.get<osrm::json::Number>().value;
-        }
-        else if(e.first == "weight_name") {
-            route_result[String("weight_name")] = e.second.get<osrm::json::String>().value;
-        }
-        else if(e.first == "geometry") {
-            route_result[String("geometry")] = parse_geometry(e.second);
-        }
-        else if(e.first == "legs") {
-            route_result[String("legs")] = parse_route_legs(e.second);
-        }
-        else {
-
+        switch (type_index) {
+            case 0: {
+                output.push(array_item.get<osrm::json::String>().value);
+                break;
+            }
+            case 1: {
+                output.push(array_item.get<osrm::json::Number>().value);
+                break;
+            }
+            case 2: {
+                auto value = array_item.get<osrm::json::Object>();
+                output.push(parseObject(value));
+                break;
+            }
+            case 3: {
+                auto array = array_item.get<osrm::json::Array>();
+                output.push(parseArray(array));
+                break;
+            }
+            case 4: {
+                output.push(true);
+                break;
+            }
+            case 5: {
+                output.push(false);
+                break;
+            }
+            case 6: {
+                output.push(NULL);
+                break;
+            }
+            default:
+                break;
         }
     }
 
-    return route_result;
-}
-
-Hash OsrmWrap::parse_geometry(osrm::util::json::Value value) {
-    auto geometry = value.get<osrm::json::Object>();
-    Hash result;
-
-    for(std::pair<std::string, osrm::util::json::Value> e : geometry.values) {
-        if (e.first == "type") {
-            result[String("type")] = e.second.get<osrm::json::String>().value;
-        }
-        else if (e.first == "coordinates") {
-            Array coordinates;
-            for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                Array coordinate;
-
-                for (auto const &c : value.get<osrm::json::Array>().values) {
-                    coordinate.push(c.get<osrm::json::Number>().value);
-                }
-
-                coordinates.push(coordinate);
-            }
-            result[String("coordinates")] = coordinates;
-        }
-        else {
-        }
-    }
-
-    return result;
-}
-
-Array OsrmWrap::parse_route_legs(osrm::util::json::Value value) {
-    Array legs_array;
-    auto &legsValues = value.get<osrm::json::Array>();
-
-    for(auto const& legValue : legsValues.values) {
-        auto leg = legValue.get<osrm::json::Object>();
-        Hash leg_result;
-
-        for(std::pair<std::string, osrm::util::json::Value> e : leg.values) {
-            if(e.first == "distance") {
-                leg_result[String("distance")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "duration") {
-                leg_result[String("duration")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "weight") {
-                leg_result[String("weight")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "summary") {
-                leg_result[String("summary")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "steps") {
-                leg_result[String("steps")] = parse_route_leg_steps(e.second);
-            }
-            else if(e.first == "annotation") {
-                leg_result[String("annotation")] = parse_route_leg_annotations(e.second);
-            }
-            else {
-            }
-        }
-
-        legs_array.push(leg_result);
-    }
-
-    return legs_array;
-}
-
-Array OsrmWrap::parse_route_leg_steps(osrm::util::json::Value value) {
-    Array steps_array;
-    auto &stepsValues = value.get<osrm::json::Array>();
-    
-    for(auto const& stepValue : stepsValues.values) {
-        auto step = stepValue.get<osrm::json::Object>();
-        Hash step_result;
-        
-        for(std::pair<std::string, osrm::util::json::Value> e : step.values) {
-            if(e.first == "distance") {
-                step_result[String("distance")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "duration") {
-                step_result[String("duration")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "weight") {
-                step_result[String("weight")] = e.second.get<osrm::json::Number>().value;
-            }
-            else if(e.first == "geometry") {
-                step_result[String("geometry")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "name") {
-                step_result[String("name")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "ref") {
-                step_result[String("ref")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "pronunciation") {
-                step_result[String("pronunciation")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "destinations") {
-                step_result[String("destinations")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "exits") {
-                step_result[String("exits")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "mode") {
-                step_result[String("mode")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "maneuver") {
-                auto values = e.second.get<osrm::json::Object>().values;
-                Hash maneuver;
-                maneuver[String("modifier")] = values.at("modifier").get<osrm::json::String>().value;
-                maneuver[String("type")] = values.at("type").get<osrm::json::String>().value;
-                step_result[String("maneuver")] = maneuver;
-            }
-            else if(e.first == "intersections") {
-                //step_result[String("intersections")] = e.second.get<osrm::json::String>().value; // TODO
-            }
-            else if(e.first == "rotary_name") {
-                step_result[String("rotary_name")] = e.second.get<osrm::json::String>().value;
-            }
-            else if(e.first == "rotary_pronunciation") {
-                step_result[String("rotary_pronunciation")] = e.second.get<osrm::json::String>().value;
-            }
-            else {
-            }
-        }
-
-        steps_array.push(step_result);
-    }
-
-    return steps_array;
-}
-
-Hash OsrmWrap::parse_route_leg_annotations(osrm::util::json::Value value) {
-    auto annotations = value.get<osrm::json::Object>();
-    Hash result;
-
-    for(std::pair<std::string, osrm::util::json::Value> e : annotations.values) {
-        if(e.first == "distance") {
-            Array values;
-            for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(value.get<osrm::json::Number>().value);
-            }
-            result[String("distance")] = values;
-        }
-        else if(e.first == "duration") {
-            Array values;
-            for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(value.get<osrm::json::Number>().value);
-            }
-            result[String("duration")] = values;
-        }
-        else if(e.first == "datasources") {
-            Array values;
-            for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(value.get<osrm::json::Number>().value);
-            }
-            result[String("datasources")] = values;
-        }
-        else if(e.first == "nodes") {
-            Array values;
-            for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(value.get<osrm::json::Number>().value);
-            }
-            result[String("nodes")] = values;
-        }
-        else if(e.first == "weight") {
-            Array values;
-            for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(value.get<osrm::json::Number>().value);
-            }
-            result[String("weight")] = values;
-        }
-        else if (e.first == "metadata") {
-            // TODO
-        }
-        else if(e.first == "speed") {
-            Array values;
-            for(auto const &value : e.second.get<osrm::json::Array>().values) {
-                values.push(value.get<osrm::json::Number>().value);
-            }
-            result[String("speed")] = values;
-        }
-        else  {
-        }
-    }
-
-    return result;
-}
-
-Array OsrmWrap::parse_waypoints(osrm::json::Array waypoints) {
-    Array result;
-
-    for(auto const& waypointValue : waypoints.values) {
-        try {
-            auto waypoint = waypointValue.get<osrm::json::Object>();
-            Hash waypoint_result = parse_waypoint(waypoint);
-            result.push(waypoint_result);
-        }
-        catch(...) {}
-    }
-
-    return result;
-}
-
-Hash OsrmWrap::parse_waypoint(osrm::json::Object waypoint) {
-    Hash waypoint_result;
-
-    for(std::pair<std::string, osrm::util::json::Value> e : waypoint.values) {
-        if(e.first == "name") {
-            waypoint_result[String("name")] = e.second.get<osrm::json::String>().value;
-        }
-        else if(e.first == "location") {
-            Hash location;
-            auto const& values = e.second.get<osrm::json::Array>().values;
-            location[Symbol("latitude")] = values[1].get<osrm::json::Number>().value;
-            location[Symbol("longitude")] = values[0].get<osrm::json::Number>().value;
-            waypoint_result[String("location")] = location;
-        }
-        else if(e.first == "hint") {
-            waypoint_result[String("hint")] = e.second.get<osrm::json::String>().value;
-        }
-        else if(e.first == "distance") {
-            waypoint_result[String("distance")] = e.second.get<osrm::json::Number>().value;
-        }
-        else if(e.first == "waypoint_index") { // Present in trip action
-            waypoint_result[String("waypoint_index")] = e.second.get<osrm::json::Number>().value;
-        }
-        else if(e.first == "trips_index") { // Present in trip action
-            waypoint_result[String("trips_index")] = e.second.get<osrm::json::Number>().value;
-        }
-        else {
-        }
-    }
-
-    return waypoint_result;
+    return output;
 }
 
 std::vector<std::size_t> OsrmWrap::table_array_conversion(Object o) {

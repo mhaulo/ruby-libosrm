@@ -36,14 +36,8 @@ public:
 
 private:
     // Helper methods used by public feature functions
-    Array parse_routes(osrm::json::Array routes);
-    Hash parse_route(json::Object route);
-    Hash parse_geometry(osrm::util::json::Value);
-    Array parse_route_legs(osrm::util::json::Value value);
-    Array parse_route_leg_steps(osrm::util::json::Value value);
-    Hash parse_route_leg_annotations(osrm::util::json::Value value);
-    Array parse_waypoints(json::Array waypoints);
-    Hash parse_waypoint(json::Object waypoint);
+    Hash parseObject(osrm::json::Object input);
+    Array parseArray(osrm::json::Array input);
     std::vector<std::size_t> table_array_conversion(Object o);
 
     // OSRM routing engine
