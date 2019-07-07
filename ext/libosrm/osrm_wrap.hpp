@@ -11,6 +11,7 @@
 using namespace Rice;
 using namespace osrm;
 
+
 /*
  * This class provides the main functionality of this gem. Rather than doing direct
  * Rice library mappings to the OSRM library, everything goes through this wrapper.
@@ -21,24 +22,23 @@ using namespace osrm;
 class OsrmWrap {
 public:
     // Standard constructors and destructors
-    OsrmWrap();
     OsrmWrap(std::string database_path);
     ~OsrmWrap();
 
     // Main features
-    Object route(Array coordinates);
-    Object match(Array coordinates);
-    Object nearest(double lat, double lon);
+    Object route(Array coordinates, Hash options);
+    Object match(Array coordinates, Hash options);
+    Object nearest(double lat, double lon, Hash options);
     Object table(Array coordinates, Hash opts);
     Object trip(Array coordinates, Hash opts);
-    Object tile(int x, int y, int zoom);
-    Object distance_by_roads(Array coordinates);
 
 private:
     // Helper methods used by public feature functions
     Hash parseObject(osrm::json::Object input);
     Array parseArray(osrm::json::Array input);
     std::vector<std::size_t> table_array_conversion(Object o);
+    template <typename T> void setCoordinates(Array &coordinates, T &params);
+    void setRouteOptions(Hash &options, RouteParameters &params);
 
     // OSRM routing engine
     OSRM* osrm;

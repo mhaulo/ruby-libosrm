@@ -1,76 +1,40 @@
 # Ruby bindings for libosrm
 
-- [Repository (Github)](https://github.com/Smarre/ruby-libosrm)
-- [Documentation](http://www.rubydoc.info/github/Smarre/ruby-libosrm/master)
-- [Bugs (Github)](https://github.com/Smarre/ruby-libosrm/issues)
-
-## Description
-
 ruby-libosrm is a Ruby bindings for OSRM’s libosrm, the C++ bindings for OSRM, open source routing machine,
 which provides fast and customizable interface compared to OSRM’s old HTTP API.
 
-## Features
+## Installation
 
-This gem provides the following OSRM features:
+After you have required dependencies, you can install libosrm gem:
 
-### Match
-
-```ruby
-require "libosrm"
-
-osrm = OSRM.new "map.osrm"
-
-matchings = osrm.match([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
-
+```shell
+$ gem install libosrm
 ```
 
-### Route
+or with Bundler
 
 ```ruby
-require "libosrm"
-
-osrm = OSRM.new "map.osrm"
-
-routings = osrm.route([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
-
+# In Gemfile
+gem "libosrm"
 ```
 
-### Nearest
+and then install the bundle:
 
-```ruby
-require "libosrm"
-
-osrm = OSRM.new "map.osrm"
-
-nearest = osrm.nearest 60.1681473, 24.9417190
-
+```shell
+$ bundle install
 ```
 
-### Table
+### Prepare map data
 
-TODO: write sample code
+For libosrm to be able to calculate anything, it requires map data. You can use either data of whole world
+or a portion it, for example your country’s or specific city’s data.
 
-### Trip
+One place to get the data from is {http://download.geofabrik.de/index.html Geofabrik}.
 
-TODO: write sample code
-
-### Tile
-
-TODO: write sample code
+Currently (04/2019) ruby-libosrm only supports MLD routing algorithm. See preparation instructions from the OSRM project.
 
 
-...and additionally:
-
-### Distance by roads
-
-```ruby
-require "libosrm"
-
-osrm = OSRM.new "map.osrm"
-
-# Returns distance by roads as a float, as meters
-distance = osrm.distance_by_roads [{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }]
-```
+You can find more information at [OSRM’s README](https://github.com/Project-OSRM/osrm-backend/tree/5.12).
 
 ## Requirements
 
@@ -99,56 +63,85 @@ libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
 libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
 ```
 
-### Prepare map data
 
-For libosrm to be able to calculate anything, it requires map data. You can use either data of whole world
-or a portion it, for example your country’s or specific city’s data.
+## Features
 
-One place to get the data from is {http://download.geofabrik.de/index.html Geofabrik}.
+This gem provides the following OSRM features. Please note that the options hash in required. If you don't want to set any custom options, provide an empty hash.
 
-Currently (04/2019) ruby-libosrm only supports MLD routing algorithm. See preparation instructions from the OSRM project.
-
-
-You can find more information at [OSRM’s README](https://github.com/Project-OSRM/osrm-backend/tree/5.12).
-
-
-## Installation
-
-After you have required dependencies, you can install libosrm gem:
-
-```shell
-$ gem install libosrm
-```
-
-or with Bundler
+### Match
 
 ```ruby
-# In Gemfile
-gem "libosrm"
+require "libosrm"
+
+osrm = OSRM.new "map.osrm"
+options = {geometries: :geojson, overview: :full, gaps: :ignore, annotations: true}
+matchings = osrm.match([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }], options)
+
 ```
 
-and then install the bundle:
+### Route
 
-```shell
-$ bundle install
+```ruby
+require "libosrm"
+
+osrm = OSRM.new "map.osrm"
+options = {geometries: :geojson, overview: :full, gaps: :ignore, annotations: true}
+routings = osrm.route([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }], options)
+
 ```
 
-If there is no missing dependencies, compilation of OSRM and libosrm should start. The compilation
-should take a long time, so drink a cup of tea or hot chocolate. If everything went well,
-you should now have a working instance of libosrm.
+### Nearest
 
+```ruby
+require "libosrm"
 
-## Compiling from source code
+osrm = OSRM.new "map.osrm"
 
+nearest = osrm.nearest(60.1681473, 24.9417190)
 
-Installing from gem (see Installing section) is preferred, but it is also possible to
-build from the source.
+```
 
-NOTE: building should take long time as osrm needs to be built too.
+### Table
 
+```ruby
+require "libosrm"
+
+osrm = OSRM.new "map.osrm"
+options = {geometries: :geojson, overview: :full, gaps: :ignore, annotations: true}
+routings = osrm.table([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }], options)
+
+```
+
+### Trip
+
+```ruby
+require "libosrm"
+
+osrm = OSRM.new "map.osrm"
+options = {geometries: :geojson, overview: :full, gaps: :ignore, annotations: true}
+routings = osrm.trip([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }], options)
+
+```
+
+### Tile
+
+This OSRM feature is not yet supported.
+
+## Known issues & TODO
+
+- Routing algorithm is fixed to MLD (should be configurable)
+- some requests are not fully supported (TODO)
+- Build files after gem installation are not cleaned
+- Linking OSRM statically instead as a library would further reduce disk space usage
+- Moving the gem to another location breaks the linkage, requiring reinstallation of the gem
+- Maybe we should by default bundle all libraries? That would make it easier to get everything compiled. Or at least check if system has version and only then use bundled one.
+
+## For developers
+
+Clone the repository and check that everything works:
 
 ```shell
-$ git clone https://github.com/Smarre/ruby-libosrm.git
+$ git clone https://github.com/mhaulo/ruby-libosrm.git
 $ cd ruby-libosrm
 $ # Install bundler if required: gem install bundler
 $ bundle install
@@ -168,52 +161,7 @@ $ # prepend with sudo if you don’t use user specific gem data
 $ gem install libosrm-1.0.0.gem
 ```
 
-## Known issues & TODO
-
-- Routing algorithm is fixed to MLD (should be configurable)
-- some requests are not fully supported (TODO)
-- Build files after gem installation are not cleaned
-- Linking OSRM statically instead as a library would further reduce disk space usage
-- Moving the gem to another location breaks the linkage, requiring reinstallation of the gem
-- Maybe we should by default bundle all libraries? That would make it easier to get everything compiled. Or at least check if system has version and only then use bundled one.
-
-## Developers
-
-```shell
-$ gem install bundler
-$ bundle install
-$ rake test
-# write new feature
-$ rake test
-# rinse and repeat :-)
-```
-
-### Testing that everything works
-
-After the map data has been processed, you can start to use libosrm. To ensure everything
-works, you can use following simple script:
-
-```ruby
-require "libosrm"
-
-osrm = OSRM.new "map/finland-latest.osrm"
-
-# Returns distance by roads as a float, as meters
-distance = osrm.distance_by_roads([{ lat: 60.1681473, lon: 24.9417190 }, { lat: 60.1694561, lon: 24.9385663 }])
-puts distance
-```
-
-Save this script as test.rb (at root directory of your project) and run it:
-
-```shell
-$ bundle exec ruby test.rb
-```
-
-If you have Finnish map data, this should return you a distance.
-If you don’t have Finnish map data, an exception should be raised.
-
-
-## Contributing
+### Contributing
 
 You can do pull requests at Github using the standard pattern :-)
 

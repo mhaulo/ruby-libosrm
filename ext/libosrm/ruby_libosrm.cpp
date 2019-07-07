@@ -18,15 +18,13 @@ void Init_ruby_libosrm() {
     {
         Data_Type<OsrmWrap> rb_cLibOSRM =
             define_class<OsrmWrap>("OSRM")
-            .define_constructor(Constructor<OsrmWrap>())
-            .define_constructor(Constructor<OsrmWrap, const std::string>(), Arg("database"))
-            .define_method("route", &OsrmWrap::route)
-            .define_method("match", &OsrmWrap::match)
-            .define_method("nearest", &OsrmWrap::nearest)
-            .define_method("table", &OsrmWrap::table)
-            .define_method("trip", &OsrmWrap::trip)
-            .define_method("tile", &OsrmWrap::tile)
-            .define_method("distance_by_roads", &OsrmWrap::distance_by_roads)
+                .define_constructor(Constructor<OsrmWrap, const std::string>(),
+            Arg("database"))
+                .define_method("route", &OsrmWrap::route)
+                .define_method("match", &OsrmWrap::match)
+                .define_method("nearest", &OsrmWrap::nearest)
+                .define_method("table", &OsrmWrap::table)
+                .define_method("trip", &OsrmWrap::trip)
             ;
     }
     RUBY_CATCH

@@ -19,14 +19,6 @@
 
 // ------------- Standard constructors and destructors ------------------------
 
-OsrmWrap::OsrmWrap() {
-    EngineConfig config;
-    config.use_shared_memory = false;
-    config.algorithm = EngineConfig::Algorithm::MLD;
-    osrm = new OSRM({config});
-}
-
-
 OsrmWrap::OsrmWrap(std::string database_path) {
     EngineConfig config;
     config.storage_config = {database_path.c_str()};
@@ -35,325 +27,219 @@ OsrmWrap::OsrmWrap(std::string database_path) {
     osrm = new OSRM({config});
 }
 
-
 OsrmWrap::~OsrmWrap() {
     delete osrm;
 }
 
+
 // ------------- Main features ------------------------------------------------
 
-Object OsrmWrap::route(Array coordinates) {
+Object OsrmWrap::route(Array coordinates, Hash options) {
     RouteParameters params;
-    params.geometries = RouteParameters::GeometriesType::GeoJSON;
-    params.overview = RouteParameters::OverviewType::Full;
-    params.annotations = true;
-    params.steps = false;
-    
-// TODO: use this
-//     Object geometry_type = opts[Symbol("geometry_type")];
-//     if(!geometry_type.is_nil()) {
-//         Symbol g_type = (Symbol) geometry_type;
-//         const char *type = g_type.c_str();
-//         if(strcmp(type, "polyline") == 0) {
-//             params.geometries = osrm::RouteParameters::GeometriesType::Polyline;
-//         }
-//         if(strcmp(type, "polyline6") == 0) {
-//             params.geometries = osrm::RouteParameters::GeometriesType::Polyline6;
-//         }
-//         if(strcmp(type, "geojson") == 0) {
-//             params.geometries = osrm::RouteParameters::GeometriesType::GeoJSON;
-//         }
-//     }
-// 
-//     Object steps = opts[Symbol("steps")];
-//     if(steps) {
-//         params.steps = true;
-//     }
-// 
-//     Object annotations = opts[Symbol("annotations")];
-//     if(annotations) {
-//         params.annotations = true;
-//     }
-    
-    Array::iterator it = coordinates.begin();
-    Array::iterator end = coordinates.end();
-    for(; it != end; ++it) {
-        Hash latlon = (Hash)*it;
-        double lat = from_ruby<double>(latlon[Symbol("lat")]);
-        double lon = from_ruby<double>(latlon[Symbol("lon")]);
-        params.coordinates.push_back({
-            util::FloatLongitude{lon},
-            util::FloatLatitude{lat}
-        });
+
+    setRouteOptions(options, params);
+    setCoordinates(coordinates, params);
+
+    if (!options.is_nil()) {
+        Object alternatives_option = options[Symbol("alternatives")];
+        if (!alternatives_option.is_nil()) {
+            bool alternatives = from_ruby<bool>(alternatives_option);
+            params.alternatives = alternatives;
+        }
+
+        Object continue_straight_option = options[Symbol("continue_straight")];
+        if (!continue_straight_option.is_nil()) {
+            bool continue_straight = from_ruby<bool>(continue_straight_option);
+            params.alternatives = continue_straight;
+        }
+
+        // TODO support for the following options:
+        // - waypoints
     }
 
     json::Object osrm_output;
-    const auto status = osrm->Route(params, osrm_output);
-
+    osrm->Route(params, osrm_output);
     Hash result = parseObject(osrm_output);
 
     return result;
 }
 
 
-Object OsrmWrap::match(Array coordinates) {
+Object OsrmWrap::match(Array coordinates, Hash options) {
     MatchParameters params;
-    params.geometries = RouteParameters::GeometriesType::GeoJSON;
-    params.overview = RouteParameters::OverviewType::Full;
-    params.gaps = MatchParameters::GapsType::Ignore;
-    params.annotations = true;
 
-// TODO: use this
-//     if(!opts.is_nil()) {
-//         Object geometry_type = opts[Symbol("geometry_type")];
-//         if(!geometry_type.is_nil()) {
-//             Symbol g_type = (Symbol) geometry_type;
-//             const char *type = g_type.c_str();
-//             if(strcmp(type, "polyline") == 0) {
-//                 params.geometries = osrm::RouteParameters::GeometriesType::Polyline;
-//             }
-//             if(strcmp(type, "polyline6") == 0) {
-//                 params.geometries = osrm::RouteParameters::GeometriesType::Polyline6;
-//             }
-//             if(strcmp(type, "geojson") == 0) {
-//                 params.geometries = osrm::RouteParameters::GeometriesType::GeoJSON;
-//             }
-//         }
-// 
-//         Object steps = opts[Symbol("steps")];
-//         if(steps) {
-//             params.steps = true;
-//         }
-// 
-//         Object annotations = opts[Symbol("annotations")];
-//         if(annotations) {
-//             params.annotations = true;
-//         }
-//     }
-    
-    Array::iterator it = coordinates.begin();
-    Array::iterator end = coordinates.end();
-    for(; it != end; ++it) {
-        Hash latlon = (Hash)*it;
-        double lat = from_ruby<double>(latlon[Symbol("lat")]);
-        double lon = from_ruby<double>(latlon[Symbol("lon")]);
-        
-        params.coordinates.push_back({
-            util::FloatLongitude{lon},
-            util::FloatLatitude{lat}
-        });
+    setRouteOptions(options, params);
+    setCoordinates(coordinates, params);
+
+    if (!options.is_nil()) {
+        Object gaps_option = options[Symbol("gaps")];
+        if (!gaps_option.is_nil()) {
+            const char *type = ((Symbol)gaps_option).c_str();
+
+            if (strcmp(type, "split") == 0) {
+                params.gaps = MatchParameters::GapsType::Split;
+            }
+            else if (strcmp(type, "ignore") == 0) {
+                params.gaps = MatchParameters::GapsType::Ignore;
+            }
+        }
+
+        Object tidy_option = options[Symbol("tidy")];
+        if (!tidy_option.is_nil()) {
+            bool tidy = from_ruby<bool>(tidy_option);
+            params.tidy = tidy;
+        }
+
+        // TODO support for the following options:
+        // - timestamps
+        // - radiuses
+        // - waypoints
     }
 
     json::Object osrm_output;
-    const auto status = osrm->Match(params, osrm_output);
+    osrm->Match(params, osrm_output);
     Hash result = parseObject(osrm_output);
 
     return result;
 }
 
 
-Object OsrmWrap::nearest(double lat, double lon) {
+Object OsrmWrap::nearest(double lat, double lon, Hash options) {
     NearestParameters params;
-    params.number_of_results = 1; // TODO add argument for this
-    
-// TODO: use this
-//     if(!opts.is_nil()) {
-//         Object geometry_type = opts[Symbol("geometry_type")];
-//         if(!geometry_type.is_nil()) {
-//             Symbol g_type = (Symbol) geometry_type;
-//             const char *type = g_type.c_str();
-//             if(strcmp(type, "polyline") == 0) {
-//                 params.geometries = osrm::RouteParameters::GeometriesType::Polyline;
-//             }
-//             if(strcmp(type, "polyline6") == 0) {
-//                 params.geometries = osrm::RouteParameters::GeometriesType::Polyline6;
-//             }
-//             if(strcmp(type, "geojson") == 0) {
-//                 params.geometries = osrm::RouteParameters::GeometriesType::GeoJSON;
-//             }
-//         }
-// 
-//         Object steps = opts[Symbol("steps")];
-//         if(steps) {
-//             params.steps = true;
-//         }
-// 
-//         Object annotations = opts[Symbol("annotations")];
-//         if(annotations) {
-//             params.annotations = true;
-//         }
-//     }
+
+    // Set default parameters
+    params.number_of_results = 1;
+
+    if (!options.is_nil()) {
+        Object number = options[Symbol("number")];
+
+        if (!number.is_nil()) {
+            int number_of_results = from_ruby<int>(options[Symbol("number")]);
+            params.number_of_results = number_of_results;
+        }
+    }
 
     params.coordinates.push_back(
         {util::FloatLongitude{lon}, util::FloatLatitude{lat}}
     );
 
     json::Object osrm_output;
-    const auto status = osrm->Nearest(params, osrm_output);
-
+    osrm->Nearest(params, osrm_output);
     Hash result = parseObject(osrm_output);
 
     return result;
 }
 
 
-Object OsrmWrap::table(Array coordinates, Hash opts) {
+Object OsrmWrap::table(Array coordinates, Hash options) {
     osrm::TableParameters params;
 
-    Array::iterator it = coordinates.begin();
-    Array::iterator end = coordinates.end();
-    for(; it != end; ++it) {
-        Hash latlon = (Hash)*it;
-        double lat = from_ruby<double>(latlon[Symbol("latitude")]);
-        double lon = from_ruby<double>(latlon[Symbol("longitude")]);
-        params.coordinates.push_back({osrm::util::FloatLongitude{lon}, osrm::util::FloatLatitude{lat}});
-    }
+    setCoordinates(coordinates, params);
 
-    if(!opts.is_nil()) {
-        Object sources = opts[Symbol("sources")];
-        if(sources) {
+    if (!options.is_nil()) {
+        Object sources = options[Symbol("sources")];
+        if (!sources.is_nil()) {
             params.sources = table_array_conversion(sources);
         }
 
-        Object destinations = opts[Symbol("destinations")];
-        if(sources) {
+        Object destinations = options[Symbol("destinations")];
+        if (!destinations.is_nil()) {
             params.destinations = table_array_conversion(destinations);
         }
+
+        Object fallback_speed_setting = options[Symbol("fallback_speed")];
+        if (!fallback_speed_setting.is_nil()) {
+            double fallback_speed = from_ruby<double>(fallback_speed_setting);
+
+            if (fallback_speed >= 0) {
+                params.fallback_speed = fallback_speed;
+            }
+        }
+
+        Object fallback_coordinate_setting = options[Symbol("fallback_coordinate")];
+        if (!fallback_coordinate_setting.is_nil()) {
+            const char *type = ((Symbol)fallback_coordinate_setting).c_str();
+
+            if (strcmp(type, "input") == 0) {
+                params.fallback_coordinate_type = TableParameters::FallbackCoordinateType::Input;
+            }
+            else if (strcmp(type, "snapped") == 0) {
+                params.fallback_coordinate_type = TableParameters::FallbackCoordinateType::Snapped;
+            }
+        }
+
+        // According to OSRM documentation, there should be a setting called
+        // scale_factor. However, can't find it in code (OSRM backend v. 5.20).
+        /*Object scale_factor_setting = options[Symbol("scale_factor")];
+        if (!scale_factor_setting.is_nil()) {
+            double scale_factor = from_ruby<double>(scale_factor_setting);
+
+            if (scale_factor >= 0) {
+                params.scale_factor = scale_factor;
+            }
+        }*/
     }
 
     osrm::json::Object osrm_output;
-
-    // Execute routing request, this does the heavy lifting
-    const auto status = osrm->Table(params, osrm_output);
+    osrm->Table(params, osrm_output);
     Hash result = parseObject(osrm_output);
 
     return result;
 }
 
 
-Object OsrmWrap::trip(Array coordinates, Hash opts) {
+Object OsrmWrap::trip(Array coordinates, Hash options) {
     osrm::TripParameters params;
 
-    Array::iterator it = coordinates.begin();
-    Array::iterator end = coordinates.end();
-    for(; it != end; ++it) {
-        Hash latlon = (Hash)*it;
-        double lat = from_ruby<double>(latlon[Symbol("latitude")]);
-        double lon = from_ruby<double>(latlon[Symbol("longitude")]);
-        params.coordinates.push_back({osrm::util::FloatLongitude{lon}, osrm::util::FloatLatitude{lat}});
-    }
+    setCoordinates(coordinates, params);
+    setRouteOptions(options, params);
 
-    Object roundtrip = opts[Symbol("roundtrip")];
-    if(roundtrip) {
-        params.roundtrip = true;
-    }
-
-    Object source = opts[Symbol("source")];
-    if(!source.is_nil()) {
-        Symbol source_symbol = (Symbol) source;
-        const char *source_string = source_symbol.c_str();
-        if(strcmp(source_string, "any") == 0) {
-            params.source = osrm::TripParameters::SourceType::Any;
-        } else if(strcmp(source_string, "first") == 0) {
-            params.source = osrm::TripParameters::SourceType::First;
-        } else {
-            throw Exception(rb_eRuntimeError, "libosrm.so#wrap_trip(): failed to recognize given source symbol: %s", source_string);
+    if (!options.is_nil()) {
+        Object roundtrip_options = options[Symbol("roundtrip")];
+        if (!roundtrip_options.is_nil()) {
+            bool roundtrip = from_ruby<bool>(roundtrip_options);
+            params.roundtrip = roundtrip;
         }
-    }
 
-    Object destination = opts[Symbol("destination")];
-    if(!destination.is_nil()) {
-        Symbol destination_symbol = (Symbol) destination;
-        const char *destination_string = destination_symbol.c_str();
-        if(strcmp(destination_string, "any") == 0) {
-            params.destination = osrm::TripParameters::DestinationType::Any;
-        } else if(strcmp(destination_string, "last") == 0) {
-            params.destination = osrm::TripParameters::DestinationType::Last;
-        } else {
-            throw Exception(rb_eRuntimeError, "libosrm.so#wrap_trip(): failed to recognize given destination symbol: %s", destination_string);
-        }
-    }
+        Object source = options[Symbol("source")];
+        if (!source.is_nil()) {
+            Symbol source_symbol = (Symbol) source;
+            const char *source_string = source_symbol.c_str();
 
-    // TODO: since this option is same as in route thing, maybe we could have some kind of abstraction?
-    Object geometry_type = opts[Symbol("geometry_type")];
-    if(!geometry_type.is_nil()) {
-        Symbol g_type = (Symbol) geometry_type;
-        const char *type = g_type.c_str();
-        if(strcmp(type, "polyline") == 0) {
-            params.geometries = osrm::RouteParameters::GeometriesType::Polyline;
+            if (strcmp(source_string, "any") == 0) {
+                params.source = osrm::TripParameters::SourceType::Any;
+            }
+            else if (strcmp(source_string, "first") == 0) {
+                params.source = osrm::TripParameters::SourceType::First;
+            }
+            else {
+                throw Exception(rb_eRuntimeError, "libosrm.so#wrap_trip(): failed to recognize given source symbol: %s", source_string);
+            }
         }
-        if(strcmp(type, "polyline6") == 0) {
-            params.geometries = osrm::RouteParameters::GeometriesType::Polyline6;
-        }
-        if(strcmp(type, "geojson") == 0) {
-            params.geometries = osrm::RouteParameters::GeometriesType::GeoJSON;
-        }
-    }
 
-    Object steps = opts[Symbol("steps")];
-    if(steps) {
-        params.steps = true;
-    }
+        Object destination = options[Symbol("destination")];
+        if (!destination.is_nil()) {
+            Symbol destination_symbol = (Symbol) destination;
+            const char *destination_string = destination_symbol.c_str();
 
-    Object annotations = opts[Symbol("annotations")];
-    if(annotations) {
-        params.annotations = true;
+            if (strcmp(destination_string, "any") == 0) {
+                params.destination = osrm::TripParameters::DestinationType::Any;
+            }
+            else if (strcmp(destination_string, "last") == 0) {
+                params.destination = osrm::TripParameters::DestinationType::Last;
+            }
+            else {
+                throw Exception(rb_eRuntimeError, "libosrm.so#wrap_trip(): failed to recognize given destination symbol: %s", destination_string);
+            }
+        }
     }
 
     osrm::json::Object osrm_output;
-    const auto status = osrm->Trip(params, osrm_output);
+    osrm->Trip(params, osrm_output);
     Hash result = parseObject(osrm_output);
 
     return result;
 }
-
-
-Object OsrmWrap::tile(int x, int y, int zoom) {
-    osrm::TileParameters params;
-
-    params.x = x;
-    params.y = y;
-    params.z = zoom;
-
-    // Response is a std::string, instead of JSON stuff that is elsewhere
-    std::string result;
-
-    const auto status = osrm->Tile(params, result);
-
-    if (status != osrm::Status::Ok) {
-        throw Exception(rb_eRuntimeError, "Failed to get tile data with given input.");
-    }
-
-    return to_ruby(result);
-}
-
-
-
-Object OsrmWrap::distance_by_roads(Array coordinates) {
-    osrm::RouteParameters params;
-
-    Array::iterator it = coordinates.begin();
-    Array::iterator end = coordinates.end();
-    for(; it != end; ++it) {
-        Hash latlon = (Hash)*it;
-        double lat = from_ruby<double>(latlon[Symbol("latitude")]);
-        double lon = from_ruby<double>(latlon[Symbol("longitude")]);
-        params.coordinates.push_back({osrm::util::FloatLongitude{lon}, osrm::util::FloatLatitude{lat}});
-    }
-
-    params.overview = osrm::RouteParameters::OverviewType::False;
-
-    osrm::json::Object osrm_output;
-
-    // Execute routing request, this does the heavy lifting
-    const auto status = osrm->Route(params, osrm_output);
-    const auto code = osrm_output.values["code"].get<osrm::json::String>().value;
-    Hash result = parseObject(osrm_output);
-
-    return result;
-}
-
-
 
 // ------------- Private helper functions -------------------------------------
 
@@ -362,6 +248,7 @@ Hash OsrmWrap::parseObject(osrm::json::Object input) {
 
     for(std::pair<std::string, osrm::json::Value> e : input.values) {
         int type_index = e.second.which();
+
         switch (type_index) {
             case 0: {
                 output[String(e.first)] = e.second.get<osrm::json::String>().value;
@@ -463,4 +350,67 @@ std::vector<std::size_t> OsrmWrap::table_array_conversion(Object o) {
     }
 
     return out;
+}
+
+template <typename T>
+void OsrmWrap::setCoordinates(Array &coordinates, T &params) {
+    Array::iterator it = coordinates.begin();
+    Array::iterator end = coordinates.end();
+
+    for(; it != end; ++it) {
+        Hash latlon = (Hash)*it;
+
+        double lat = from_ruby<double>(latlon[Symbol("lat")]);
+        double lon = from_ruby<double>(latlon[Symbol("lon")]);
+
+        params.coordinates.push_back({
+            util::FloatLongitude{lon}, util::FloatLatitude{lat}
+        });
+    }
+}
+
+void OsrmWrap::setRouteOptions(Hash &options, RouteParameters &params) {
+    if (options.is_nil()) {
+        return;
+    }
+
+    Object geometry_type = options[Symbol("geometries")];
+    if (!geometry_type.is_nil()) {
+        Symbol g_type = (Symbol) geometry_type;
+        const char *type = g_type.c_str();
+        if (strcmp(type, "polyline") == 0) {
+            params.geometries = osrm::RouteParameters::GeometriesType::Polyline;
+        }
+        if (strcmp(type, "polyline6") == 0) {
+            params.geometries = osrm::RouteParameters::GeometriesType::Polyline6;
+        }
+        if (strcmp(type, "geojson") == 0) {
+            params.geometries = osrm::RouteParameters::GeometriesType::GeoJSON;
+        }
+    }
+
+    Object overview_option = options[Symbol("overview")];
+    if (!overview_option.is_nil()) {
+        const char *type = ((Symbol)overview_option).c_str();
+
+        if (strcmp(type, "simplified") == 0) {
+            params.overview = RouteParameters::OverviewType::Simplified;
+        }
+        else if (strcmp(type, "full") == 0) {
+            params.overview = RouteParameters::OverviewType::Full;
+        }
+        else if (strcmp(type, "false") == 0) {
+            params.overview = RouteParameters::OverviewType::False;
+        }
+    }
+
+    Object steps = options[Symbol("steps")];
+    if (!steps.is_nil()) {
+        params.steps = true;
+    }
+
+    Object annotations = options[Symbol("annotations")];
+    if (!annotations.is_nil()) {
+        params.annotations = true;
+    }
 }
